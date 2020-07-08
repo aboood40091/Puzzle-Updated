@@ -3535,9 +3535,7 @@ class MainWindow(QtWidgets.QMainWindow):
             for object in Tileset.objects:
                 for row in object.tiles:
                     for tile in row:
-                        if tile != (0,0,0):
-                            Tileset.objects[cobj].tiles[crow][ctile] = (tile[0], tile[1], (tile[2] & 0xFC) | int(str(item[2])))
-                        if tile == (0,0,0) and ctile == 0:
+                        if (tile[2] & 3) != 0 or tile[1] != 0:
                             Tileset.objects[cobj].tiles[crow][ctile] = (tile[0], tile[1], (tile[2] & 0xFC) | int(str(item[2])))
                         ctile += 1
                     crow += 1
