@@ -874,7 +874,7 @@ def SetupObjectModel(self, objects, tiles):
 
         for i in range(len(object.tiles)):
             for tile in object.tiles[i]:
-                if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
+                if Tileset.slot == (tile[2] & 3):
                     painter.drawPixmap(Xoffset, Yoffset, tiles[tile[1]].image)
                 Xoffset += 24
             Xoffset = 0
@@ -2333,7 +2333,7 @@ class tileWidget(QtWidgets.QWidget):
         for row in object.tiles:
             self.tiles.append([])
             for tile in row:
-                if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
+                if Tileset.slot == (tile[2] & 3):
                     self.tiles[-1].append(Tileset.tiles[tile[1]].image)
                 else:
                     pix = QtGui.QPixmap(24,24)
@@ -2353,16 +2353,35 @@ class tileWidget(QtWidgets.QWidget):
         window.tileWidget.slopeLine.update()
 
 
-    #def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event):
+        index = window.objectList.currentIndex()
+        self.object = index.row()
 
-    #    TileMenu = QtWidgets.QMenu(self)
-    #    self.contX = event.x()
-    #    self.contY = event.y()
+        if self.object < 0 or self.object >= len(Tileset.objects):
+            return
 
-    #    TileMenu.addAction('Set tile...', self.setTile)
-    #    TileMenu.addAction('Set item...', self.setItem)
+        centerPoint = self.contentsRect().center()
 
-    #    TileMenu.exec_(event.globalPos())
+        upperLeftX = centerPoint.x() - self.size[0]*12
+        upperLeftY = centerPoint.y() - self.size[1]*12
+
+        x = int((event.x() - upperLeftX) / 24)
+        y = int((event.y() - upperLeftY) / 24)
+
+        object = Tileset.objects[self.object]
+
+        if y < 0 or y >= object.height or x < 0 or x >= len(object.tiles[y]):
+            return
+
+        self.contX = x
+        self.contY = y
+
+        TileMenu = QtWidgets.QMenu(self)
+
+        TileMenu.addAction('Set tile...', self.setTile)
+        TileMenu.addAction('Set item...', self.setItem)
+
+        TileMenu.exec_(event.globalPos())
 
 
     def mousePressEvent(self, event):
@@ -2486,22 +2505,20 @@ class tileWidget(QtWidgets.QWidget):
         dlg = self.setTileDialog()
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             # Do stuff
-            centerPoint = self.contentsRect().center()
-
-            upperLeftX = centerPoint.x() - self.size[0]*12
-            upperLeftY = centerPoint.y() - self.size[1]*12
-
             tile = dlg.tile.value()
             tileset = dlg.tileset.currentIndex()
 
-            x = int((self.contX - upperLeftX) / 24)
-            y = int((self.contY - upperLeftY) / 24)
+            x = self.contX
+            y = self.contY
 
             if tileset != Tileset.slot:
                 tex = QtGui.QPixmap(self.size[0] * 24, self.size[1] * 24)
                 tex.fill(Qt.transparent)
 
-                self.tiles[(y * self.size[0]) + x][2] = tex
+                self.tiles[y][x] = tex
+
+            else:
+                self.tiles[y][x] = Tileset.tiles[tile].image
 
             Tileset.objects[self.object].tiles[y][x] = (Tileset.objects[self.object].tiles[y][x][0], tile, tileset)
 
@@ -2538,13 +2555,8 @@ class tileWidget(QtWidgets.QWidget):
     def setItem(self):
         global Tileset
 
-        centerPoint = self.contentsRect().center()
-
-        upperLeftX = centerPoint.x() - self.size[0]*12
-        upperLeftY = centerPoint.y() - self.size[1]*12
-
-        x = int((self.contX - upperLeftX) / 24)
-        y = int((self.contY - upperLeftY) / 24)
+        x = self.contX
+        y = self.contY
 
         obj = Tileset.objects[self.object].tiles[y][x]
 
