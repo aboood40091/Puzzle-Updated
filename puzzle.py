@@ -857,6 +857,11 @@ class objectList(QtWidgets.QListView):
         self.setMinimumHeight(140)
         self.setMaximumHeight(140)
 
+        self.noneIdx = self.currentIndex()
+
+    def clearCurrentIndex(self):
+        self.setCurrentIndex(self.noneIdx)
+
 
 
 def SetupObjectModel(self, objects, tiles):
@@ -1911,6 +1916,11 @@ class tileOverlord(QtWidgets.QWidget):
 
     def setObject(self, index):
         global Tileset
+
+        self.tiles.object = index.row()
+        if self.tiles.object < 0 or self.tiles.object >= len(Tileset.objects):
+            return
+
         object = Tileset.objects[index.row()]
 
         self.tilingMethod.setCurrentIndex(object.determineTilingMethod())
@@ -2975,6 +2985,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tileWidget.tilesetType.setText('Pa0')
 
         self.setuptile()
+
+        self.objectList.clearCurrentIndex()
+        self.tileWidget.setObject(self.objectList.currentIndex())
+
+        self.objectList.update()
+        self.tileWidget.update()
+
         self.setWindowTitle('New Tileset')
 
 
@@ -3130,6 +3147,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setuptile()
         SetupObjectModel(self.objmodel, Tileset.objects, Tileset.tiles)
 
+        self.objectList.clearCurrentIndex()
+        self.tileWidget.setObject(self.objectList.currentIndex())
+
+        self.objectList.update()
+        self.tileWidget.update()
+
         self.name = path
 
 
@@ -3173,7 +3196,16 @@ class MainWindow(QtWidgets.QMainWindow):
                 y += 1
                 x = 0
 
+        index = self.objectList.currentIndex()
+
         self.setuptile()
+        SetupObjectModel(self.objmodel, Tileset.objects, Tileset.tiles)
+
+        self.objectList.setCurrentIndex(index)
+        self.tileWidget.setObject(index)
+
+        self.objectList.update()
+        self.tileWidget.update()
 
 
     def saveImage(self):
@@ -3547,12 +3579,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def toggleAlpha(self):
         # Replace Alpha Image with non-Alpha images in model
-        if self.alpha == True:
-            self.alpha = False
-        else:
-            self.alpha = True
+        self.alpha = not self.alpha
 
         self.setuptile()
+
+        self.tileWidget.setObject(self.objectList.currentIndex())
+        self.tileWidget.update()
 
     def clearObjects(self):
         '''Clears the object data'''
