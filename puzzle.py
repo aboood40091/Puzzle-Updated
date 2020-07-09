@@ -2985,12 +2985,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tileWidget.tilesetType.setText('Pa0')
 
         self.setuptile()
-
-        self.objectList.clearCurrentIndex()
-        self.tileWidget.setObject(self.objectList.currentIndex())
-
-        self.objectList.update()
-        self.tileWidget.update()
+        self.clearObjects()
 
         self.setWindowTitle('New Tileset')
 
