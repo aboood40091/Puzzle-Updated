@@ -3134,9 +3134,31 @@ class MainWindow(QtWidgets.QMainWindow):
             lowerslope = [0, 0]
 
         if Tileset.objects:
-            Tileset.slot = Tileset.objects[0].tiles[0][0][2] & 3
+            slots = []
+            for object in Tileset.objects:
+                for row in object.tiles:
+                    for tile in row:
+                        slot = tile[2] & 3
+                        if slot != 0 or tile[1] != 0:
+                            slots.append(slot)
+                        
+            Tileset.slot = max(slots, key=slots.count)
+            del slots
+
+            if name[:4] in ('Pa0_', 'Pa1_', 'Pa2_', 'Pa3_'):
+                slot = int(name[2])
+                if slot != Tileset.slot:
+                    # TODO: make a proper warning window
+                    print("WARNING: Determined tileset slot does not match with the slot in the filename!")
+                    print("Determined tileset slot:", Tileset.slot)
+                    print("Filename tileset slot:", slot)
+
+            else:
+                print("WARNING: Tileset name does not begin with \"PaX_\". Unable to verify tileset slot.")
+
         else:
             Tileset.slot = 1
+
         self.tileWidget.tilesetType.setText('Pa{0}'.format(Tileset.slot))
 
         self.setuptile()
