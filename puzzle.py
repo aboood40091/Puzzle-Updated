@@ -2867,25 +2867,20 @@ def RGB4A3Decode(tex, useAlpha=True):
 def RGB4A3Encode(tex):
     shorts = []
     colorCache = {}
-    for ytile in range(0, 256, 4):
-        for xtile in range(0, 1024, 4):
-            for ypixel in range(ytile, ytile + 4):
-                for xpixel in range(xtile, xtile + 4):
 
-                    if xpixel >= 1024 or ypixel >= 256:
-                        continue
-
-                    pixel = tex.pixel(xpixel, ypixel)
-
-                    a = pixel >> 24
-                    r = (pixel >> 16) & 0xFF
-                    g = (pixel >> 8) & 0xFF
-                    b = pixel & 0xFF
-
+    for yTile in range(0, 256, 4):
+        for xTile in range(0, 1024, 4):
+            for y in range(yTile, yTile + 4):
+                for x in range(xTile, xTile + 4):
+                    pixel = tex.pixel(x, y)
                     if pixel in colorCache:
                         rgba = colorCache[pixel]
 
                     else:
+                        a = pixel >> 24
+                        r = (pixel >> 16) & 0xFF
+                        g = (pixel >> 8) & 0xFF
+                        b = pixel & 0xFF
 
                         # See encodingTests.py for verification that these
                         # channel conversion formulas are 100% correct
@@ -2913,19 +2908,9 @@ def RGB4A3Encode(tex):
                             # 1rrrrrgggggbbbbb
                             rgba = blue | (green << 5) | (red << 10) | (0x8000)
 
-                            colorCache[pixel] = rgba
+                        colorCache[pixel] = rgba
 
                     shorts.append(rgba)
-
-                    if xtile % 32 == 0 or xtile % 32 == 28:
-                        shorts.append(rgba)
-                        shorts.append(rgba)
-                        shorts.append(rgba)
-                        break
-                if xtile % 32 == 0 or xtile % 32 == 28:
-                    shorts.extend(shorts[-4:])
-                    shorts.extend(shorts[-8:])
-                    break
 
     return struct.pack('>262144H', *shorts)
 
